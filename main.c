@@ -785,4 +785,259 @@ void excluir(Produto lista[], int *total) {
 }
 
 
-// ==========================================================
+// ============================================================
+// TOPICO 5 - BUBBLE SORT E PONTEIROS
+// ============================================================
+
+
+// Troca dois produtos de posição utilizando ponteiros.
+void trocar(Produto *a, Produto *b) {
+
+    // Guarda temporariamente o primeiro produto.
+    Produto auxiliar = *a;
+
+    // Coloca o segundo produto na posição do primeiro.
+    *a = *b;
+
+    // Coloca o produto original na posição do segundo.
+    *b = auxiliar;
+}
+
+
+// Ordena os produtos utilizando Bubble Sort.
+//
+// O Bubble Sort compara elementos vizinhos e troca
+// suas posições quando estão fora da ordem desejada.
+void ordenar(Produto lista[], int total) {
+
+    if (total == 0) {
+
+        printf("Nenhum produto cadastrado.\n");
+
+        return;
+    }
+
+    // Exibe as opções de ordenação.
+    printf("\n1 - Nome A-Z\n");
+    printf("2 - Nome Z-A\n");
+    printf("3 - Menor preco\n");
+    printf("4 - Maior preco\n");
+
+    // Lê a opção selecionada.
+    int opcao = lerInteiro("Opcao: ", 1);
+
+    if (opcao > 4) {
+
+        printf("Opcao invalida.\n");
+
+        return;
+    }
+
+    // Cria um vetor auxiliar para não modificar
+    // a ordem original dos produtos cadastrados.
+    Produto copia[MAX];
+
+    // Copia todos os produtos para o vetor auxiliar.
+    for (int i = 0; i < total; i++) {
+
+        copia[i] = lista[i];
+    }
+
+    // Laço externo controla a quantidade de passagens.
+    for (int i = 0; i < total - 1; i++) {
+
+        // Laço interno compara elementos vizinhos.
+        // total - i - 1 evita comparar posições já ordenadas.
+        for (int j = 0; j < total - i - 1; j++) {
+
+            // Compara os nomes dos dois produtos vizinhos.
+            int ordem = comparar(
+                copia[j].nome,
+                copia[j + 1].nome
+            );
+
+            // Define se os produtos devem trocar de posição.
+            //
+            // Opção 1: nome em ordem crescente.
+            // Opção 2: nome em ordem decrescente.
+            // Opção 3: preço do menor para o maior.
+            // Opção 4: preço do maior para o menor.
+            //
+            // || significa OU lógico.
+            // && significa E lógico.
+            int mudar =
+                (opcao == 1 && ordem > 0) ||
+                (opcao == 2 && ordem < 0) ||
+                (opcao == 3 && copia[j].preco > copia[j + 1].preco) ||
+                (opcao == 4 && copia[j].preco < copia[j + 1].preco);
+
+            // Realiza a troca quando necessário.
+            if (mudar) {
+
+                // Passa os endereços dos produtos vizinhos.
+                trocar(&copia[j], &copia[j + 1]);
+            }
+        }
+    }
+
+    // Exibe a cópia ordenada.
+    // O vetor original permanece inalterado.
+    listar(copia, total);
+}
+
+
+// ============================================================
+// TOPICO 6 - EXPORTACAO CSV E MENU
+// ============================================================
+
+
+// Exporta os produtos para um arquivo CSV.
+//
+// CSV significa Comma-Separated Values.
+// É um formato de texto que pode ser aberto em planilhas.
+void exportarCSV(Produto lista[], int total) {
+
+    // Cria o arquivo CSV no modo escrita.
+    FILE *arquivo = fopen("produtos.csv", "w");
+
+    // Verifica se houve erro ao criar o arquivo.
+    if (arquivo == NULL) {
+
+        perror("Erro ao exportar CSV");
+
+        return;
+    }
+
+    // Escreve o cabeçalho das colunas.
+    fprintf(
+        arquivo,
+        "ID,Produto,Categoria,Preco,Quantidade,Fornecedor\n"
+    );
+
+    // Percorre os produtos cadastrados.
+    for (int i = 0; i < total; i++) {
+
+        // Ponteiro para o produto atual.
+        Produto *p = &lista[i];
+
+        // Grava cada produto em uma linha.
+        // As vírgulas separam as colunas.
+        // As aspas delimitam os campos textuais.
+        fprintf(
+            arquivo,
+            "%d,\"%s\",\"%s\",%.2f,%d,\"%s\"\n",
+            p->id,
+            p->nome,
+            p->categoria,
+            p->preco,
+            p->quantidade,
+            p->fornecedor
+        );
+    }
+
+    // Fecha o arquivo e verifica o resultado.
+    if (fclose(arquivo) == 0) {
+
+        printf("Arquivo produtos.csv criado.\n");
+
+    } else {
+
+        printf("Erro ao finalizar CSV.\n");
+    }
+}
+
+
+// Função principal: ponto de entrada do programa.
+int main(void) {
+
+    // Cria um vetor com capacidade para até MAX produtos.
+    Produto lista[MAX];
+
+    // Carrega os produtos do arquivo ao iniciar.
+    // O retorno informa quantos produtos foram carregados.
+    int total = carregar(lista);
+
+    // Armazena a opção escolhida no menu.
+    int opcao;
+
+    // O do-while executa o menu pelo menos uma vez.
+    do {
+
+        // Exibe as funcionalidades disponíveis.
+        printf("\n========== MENU PRINCIPAL ==========\n");
+        printf("1 - Cadastrar produto\n");
+        printf("2 - Listar produtos\n");
+        printf("3 - Alterar produto\n");
+        printf("4 - Excluir produto\n");
+        printf("5 - Buscar por nome\n");
+        printf("6 - Buscar por categoria\n");
+        printf("7 - Ordenar produtos\n");
+        printf("8 - Exportar CSV\n");
+        printf("0 - Sair\n");
+
+        // Solicita um inteiro maior ou igual a zero.
+        opcao = lerInteiro("Opcao: ", 0);
+
+        // Executa uma função de acordo com a opção.
+        switch (opcao) {
+
+            case 1:
+                // Passa &total porque cadastrar pode
+                // modificar a quantidade de produtos.
+                cadastrar(lista, &total);
+                break;
+
+            case 2:
+                // Exibe os produtos cadastrados.
+                listar(lista, total);
+                break;
+
+            case 3:
+                // Permite alterar um produto existente.
+                alterar(lista, total);
+                break;
+
+            case 4:
+                // &total permite atualizar o contador
+                // após a exclusão.
+                excluir(lista, &total);
+                break;
+
+            case 5:
+                // O parâmetro 0 indica busca por nome.
+                buscar(lista, total, 0);
+                break;
+
+            case 6:
+                // O parâmetro 1 indica busca por categoria.
+                buscar(lista, total, 1);
+                break;
+
+            case 7:
+                // Ordena e exibe os produtos.
+                ordenar(lista, total);
+                break;
+
+            case 8:
+                // Exporta os dados para um arquivo CSV.
+                exportarCSV(lista, total);
+                break;
+
+            case 0:
+                // Encerra o programa.
+                printf("Encerrando programa.\n");
+                break;
+
+            default:
+                // Trata opções que não existem no menu.
+                printf("Opcao invalida.\n");
+                break;
+        }
+
+        // Repete enquanto a opção escolhida for diferente de 0.
+    } while (opcao != 0);
+
+    // Retorna 0 ao sistema operacional,
+    // indicando encerramento normal.
+    return 0;
+}
